@@ -6,30 +6,48 @@
     <title>打砖块</title>
     <style>
         /* 全局样式 */
-        body {
-            font-family: Arial, sans-serif;
+        html, body {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
+            width: 100%;
+            height: 100%;
             overflow: hidden; /* 禁止页面滚动 */
             touch-action: none; /* 禁止触摸默认行为 */
         }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+
         .game-container {
             text-align: center;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: min(600px, 90%); /* 移动端宽度适配 */
+            width: 100%;
         }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 1.5rem; /* 移动端标题字体大小 */
+        }
+
         canvas {
             border: 1px solid #000;
             display: block;
             margin: 0 auto;
+            width: 100%; /* 画布宽度占满容器 */
+            max-width: 480px; /* 最大宽度 */
+            height: auto; /* 高度自适应 */
+            aspect-ratio: 3 / 2; /* 固定宽高比 3:2 */
         }
+
         .back-button {
             display: inline-block;
             margin-top: 20px;
@@ -41,6 +59,7 @@
             border-radius: 5px;
             transition: background-color 0.3s;
         }
+
         .back-button:hover {
             background-color: #0056b3;
         }
@@ -51,6 +70,7 @@
             margin-top: 20px;
             text-align: center;
         }
+
         .virtual-buttons button {
             font-size: 24px;
             padding: 15px;
@@ -61,16 +81,13 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
         .virtual-buttons button:active {
             background-color: #0056b3;
         }
 
         /* 移动端样式 */
         @media (max-width: 600px) {
-            canvas {
-                width: 90vw;
-                height: 60vh;
-            }
             .virtual-buttons {
                 display: block; /* 移动端显示虚拟按钮 */
             }
@@ -88,18 +105,34 @@
         </div>
         <a href="index.html" class="back-button">返回主界面</a>
     </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // 动态调整画布大小
+        function resizeCanvas() {
+            const maxWidth = 480; // 最大宽度
+            const aspectRatio = 3 / 2; // 宽高比 3:2
+            const width = Math.min(window.innerWidth * 0.9, maxWidth); // 画布宽度
+            const height = width / aspectRatio; // 画布高度
+
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        // 初始化画布大小
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
         const ballRadius = 10;
         let x = canvas.width / 2;
         let y = canvas.height - 30;
-        let dx = 2;
-        let dy = -2;
+        let dx = 2 * (canvas.width / 480); // 根据画布宽度调整速度
+        let dy = -2 * (canvas.height / 320); // 根据画布高度调整速度
 
         const paddleHeight = 10;
-        const paddleWidth = 75;
+        const paddleWidth = 75 * (canvas.width / 480); // 根据画布宽度调整挡板宽度
         let paddleX = (canvas.width - paddleWidth) / 2;
 
         let rightPressed = false;
@@ -107,11 +140,11 @@
 
         const brickRowCount = 3;
         const brickColumnCount = 5;
-        const brickWidth = 75;
-        const brickHeight = 20;
-        const brickPadding = 10;
-        const brickOffsetTop = 30;
-        const brickOffsetLeft = 30;
+        const brickWidth = 75 * (canvas.width / 480); // 根据画布宽度调整砖块宽度
+        const brickHeight = 20 * (canvas.height / 320); // 根据画布高度调整砖块高度
+        const brickPadding = 10 * (canvas.width / 480); // 根据画布宽度调整砖块间距
+        const brickOffsetTop = 30 * (canvas.height / 320); // 根据画布高度调整砖块顶部偏移
+        const brickOffsetLeft = 30 * (canvas.width / 480); // 根据画布宽度调整砖块左侧偏移
 
         let bricks = [];
         for (let c = 0; c < brickColumnCount; c++) {
@@ -192,8 +225,8 @@
         function resetBall() {
             x = paddleX + paddleWidth / 2;
             y = canvas.height - 30;
-            dx = 2;
-            dy = -2;
+            dx = 2 * (canvas.width / 480);
+            dy = -2 * (canvas.height / 320);
         }
 
         function draw() {
@@ -225,9 +258,9 @@
             }
 
             if (rightPressed && paddleX < canvas.width - paddleWidth) {
-                paddleX += 7;
+                paddleX += 7 * (canvas.width / 480);
             } else if (leftPressed && paddleX > 0) {
-                paddleX -= 7;
+                paddleX -= 7 * (canvas.width / 480);
             }
 
             x += dx;
