@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小游戏集合</title>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #0f2027; /* 深色模式默认背景 */
+            overflow: hidden; /* 隐藏超出部分 */
+            position: relative;
+            transition: background 0.5s ease;
+        }
+
+        /* 浅色模式 */
+        body.light-mode {
+            background: linear-gradient(to bottom, #87CEEB, #f0f0f0); /* 天空渐变 */
+            color: #333;
+        }
+
+        /* 星空动画（深色模式） */
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+            pointer-events: none; /* 防止干扰点击 */
+        }
+
+        /* 萤火虫动画（深色模式） */
+        @keyframes fireflyMove {
+            0% {
+                transform: translate(0, 0);
+            }
+            25% {
+                transform: translate(20px, 10px);
+            }
+            50% {
+                transform: translate(-10px, 20px);
+            }
+            75% {
+                transform: translate(15px, -10px);
+            }
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+
+        @keyframes fireflyBlink {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .firefly {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: yellow;
+            border-radius: 50%;
+            pointer-events: none; /* 防止干扰点击 */
+            animation: fireflyMove 10s infinite ease-in-out, fireflyBlink 2s infinite ease-in-out;
+        }
+
+        /* 云朵动画（浅色模式） */
+        @keyframes cloudMove {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: cloudMove linear infinite;
+            pointer-events: none; /* 防止干扰点击 */
+        }
+
+        .cloud::before,
+        .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .cloud::before {
+            width: 80px;
+            height: 80px;
+            top: -40px;
+            left: 20px;
+        }
+
+        .cloud::after {
+            width: 100px;
+            height: 100px;
+            top: -50px;
+            right: 20px;
+        }
+
+        /* 切换主题时的加载扩散渐变动画 */
+        @keyframes ripple {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .ripple-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8), transparent);
+            animation: ripple 0.5s ease-out;
+            pointer-events: none; /* 防止干扰点击 */
+        }
+
+        .game-container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.8); /* 半透明背景 */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            z-index: 2; /* 确保内容在动画之上 */
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .game-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-link {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            color: #fff;
+            background-color: #007BFF;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .game-link:hover {
+            background-color: #0056b3;
+        }
+
+        /* 深浅模式切换按钮 */
+        .mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 3;
+        }
+    </style>
+</head>
+<body>
+    <!-- 深浅模式切换按钮 -->
+    <div class="mode-toggle" id="modeToggle">🌙</div>
+
+    <!-- 游戏列表 -->
+    <div class="game-container">
+        <h1>小游戏集合</h1>
+        <div class="game-list">
+            <a href="guess-number.html" class="game-link">猜数字游戏</a>
+            <a href="tic-tac-toe.html" class="game-link">井字棋游戏</a>
+            <a href="snake.html" class="game-link">贪吃蛇游戏</a>
+            <a href="breakout.html" class="game-link">打砖块游戏</a>
+            <a href="memory-cards.html" class="game-link">记忆卡片游戏</a>
+        </div>
+    </div>
+
+    <script>
+        // 深浅模式切换
+        const modeToggle = document.getElementById('modeToggle');
+        const body = document.body;
+
+        // 创建加载扩散渐变动画
+        function createRippleEffect() {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple-effect';
+            document.body.appendChild(ripple);
+
+            // 动画结束后移除元素
+            ripple.addEventListener('animationend', () => {
+                ripple.remove();
+            });
+        }
+
+        modeToggle.addEventListener('click', () => {
+            createRippleEffect(); // 触发加载扩散渐变动画
+            setTimeout(() => {
+                body.classList.toggle('light-mode');
+                modeToggle.textContent = body.classList.contains('light-mode') ? '☀️' : '🌙';
+                updateAnimation(); // 切换动画
+            }, 250); // 等待动画完成后再切换模式
+        });
+
+        // 生成随机星星
+        function createStars() {
+            const starContainer = document.createElement('div');
+            starContainer.className = 'star-container';
+            starContainer.style.position = 'absolute';
+            starContainer.style.top = '0';
+            starContainer.style.left = '0';
+            starContainer.style.width = '100%';
+            starContainer.style.height = '100%';
+            starContainer.style.pointerEvents = 'none';
+            document.body.appendChild(starContainer);
+
+            for (let i = 0; i < 108; i++) { // 生成 100 颗星星
+                const star = document.createElement('div');
+                star.className = 'star';
+
+                // 随机位置
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+
+                // 随机动画延迟
+                star.style.animationDelay = `${Math.random() * 2}s`;
+
+                starContainer.appendChild(star);
+            }
+        }
+
+        // 生成随机萤火虫
+        function createFireflies() {
+            const fireflyContainer = document.createElement('div');
+            fireflyContainer.className = 'firefly-container';
+            fireflyContainer.style.position = 'absolute';
+            fireflyContainer.style.top = '0';
+            fireflyContainer.style.left = '0';
+            fireflyContainer.style.width = '100%';
+            fireflyContainer.style.height = '100%';
+            fireflyContainer.style.pointerEvents = 'none';
+            document.body.appendChild(fireflyContainer);
+
+            for (let i = 0; i < 17; i++) { // 生成 20 只萤火虫
+                const firefly = document.createElement('div');
+                firefly.className = 'firefly';
+
+                // 随机位置
+                firefly.style.top = `${Math.random() * 100}%`;
+                firefly.style.left = `${Math.random() * 100}%`;
+
+                // 随机动画速度
+                const duration = Math.random() * 10 + 10; // 10s 到 20s
+                firefly.style.animation = `fireflyMove ${duration}s infinite ease-in-out, fireflyBlink 2s infinite ease-in-out`;
+
+                fireflyContainer.appendChild(firefly);
+            }
+        }
+
+        // 生成随机云朵
+        function createClouds() {
+            const cloudContainer = document.createElement('div');
+            cloudContainer.className = 'cloud-container';
+            cloudContainer.style.position = 'absolute';
+            cloudContainer.style.top = '0';
+            cloudContainer.style.left = '0';
+            cloudContainer.style.width = '100%';
+            cloudContainer.style.height = '100%';
+            cloudContainer.style.pointerEvents = 'none';
+            document.body.appendChild(cloudContainer);
+
+            for (let i = 0; i < 10; i++) { // 生成 5 朵云
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+
+                // 随机大小
+                const cloudWidth = Math.random() * 150 + 100; // 宽度在 100px 到 250px 之间
+                const cloudHeight = cloudWidth * 0.4; // 高度为宽度的 40%
+                cloud.style.width = `${cloudWidth}px`;
+                cloud.style.height = `${cloudHeight}px`;
+
+                // 随机位置（分布在页面上半部分）
+                cloud.style.top = `${Math.random() * 50}%`; // 顶部 0% 到 50%
+                cloud.style.left = `${Math.random() * 100}%`; // 左侧 0% 到 100%
+
+                // 随机动画速度
+                cloud.style.animationDuration = `${Math.random() * 20 + 30}s`; // 30s 到 50s
+
+                cloudContainer.appendChild(cloud);
+            }
+        }
+
+        // 更新动画
+        function updateAnimation() {
+            const starContainer = document.querySelector('.star-container');
+            const fireflyContainer = document.querySelector('.firefly-container');
+            const cloudContainer = document.querySelector('.cloud-container');
+
+            if (body.classList.contains('light-mode')) {
+                // 浅色模式：显示云朵，隐藏星星和萤火虫
+                if (starContainer) starContainer.remove();
+                if (fireflyContainer) fireflyContainer.remove();
+                if (!cloudContainer) createClouds();
+            } else {
+                // 深色模式：显示星星和萤火虫，隐藏云朵
+                if (cloudContainer) cloudContainer.remove();
+                if (!starContainer) createStars();
+                if (!fireflyContainer) createFireflies();
+            }
+        }
+
+        // 初始化动画
+        createStars();
+        createFireflies();
+    </script>
+</body>
+</html>

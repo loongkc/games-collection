@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜数字游戏</title>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input[type="number"] {
+            padding: 10px;
+            font-size: 1em;
+            width: 80%;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button, .button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* 图标和文字之间的间距 */
+            text-decoration: none; /* 去掉下划线 */
+            width: calc(100% - 40px); /* 按钮宽度占满容器，减去 padding */
+            margin-top: 10px; /* 按钮之间的间距 */
+        }
+        button:hover, .button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .history {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .history ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .history li {
+            margin: 5px 0;
+        }
+        .restart-button {
+            background-color: #28a745;
+        }
+        .restart-button:hover {
+            background-color: #218838;
+        }
+        .back-button {
+            background-color: #007BFF; /* 蓝色背景 */
+            color: #fff; /* 白色文字 */
+        }
+        .back-button:hover {
+            background-color: #0056b3; /* 悬停时深蓝色 */
+        }
+        /* 图标样式 */
+        .icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor; /* 图标颜色与文字颜色一致 */
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>猜数字游戏</h1>
+        <p>猜一个1到100之间的数字：</p>
+        <input type="number" id="guessInput" min="1" max="100" placeholder="输入你的猜测">
+        <button onclick="checkGuess()">提交</button>
+        <div class="result" id="result"></div>
+        <div class="history">
+            <h3>猜测历史：</h3>
+            <ul id="history"></ul>
+        </div>
+        <button class="restart-button" onclick="restartGame()">
+            <svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+            </svg>
+            重新开始
+        </button>
+        <a href="index.html" class="back-button button">
+            <svg class="icon" viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            返回主界面
+        </a>
+    </div>
+
+    <script>
+        let randomNumber = Math.floor(Math.random() * 100) + 1;
+        let attempts = 0;
+        const maxAttempts = 10;
+        const history = [];
+        let lowerBound = 1;
+        let upperBound = 100;
+
+        function checkGuess() {
+            const guessInput = document.getElementById('guessInput');
+            const result = document.getElementById('result');
+            const historyList = document.getElementById('history');
+            const guess = parseInt(guessInput.value);
+
+            if (isNaN(guess) || guess < 1 || guess > 100) {
+                result.textContent = '请输入1到100之间的有效数字！';
+                return;
+            }
+
+            attempts++;
+            let range = `(${lowerBound} - ${upperBound})`;
+            history.push({ guess, range });
+            historyList.innerHTML = history.map((entry, index) => 
+                `<li>第 ${index + 1} 次猜测：${entry.guess}，范围：${entry.range}</li>`
+            ).join('');
+
+            if (guess === randomNumber) {
+                result.innerHTML = `恭喜你，猜对了！你用了 ${attempts} 次猜测。`;
+                endGame();
+            } else if (attempts >= maxAttempts) {
+                result.innerHTML = `很遗憾，你没有猜中。正确答案是 ${randomNumber}。`;
+                endGame();
+            } else {
+                if (guess < randomNumber) {
+                    lowerBound = guess + 1;
+                } else {
+                    upperBound = guess - 1;
+                }
+                const difference = Math.abs(randomNumber - guess);
+                let hint = '';
+                if (difference <= 5) {
+                    hint = '非常接近了！';
+                } else if (difference <= 10) {
+                    hint = '接近了！';
+                } else if (difference <= 20) {
+                    hint = '有点远。';
+                } else {
+                    hint = '差远了。';
+                }
+                result.innerHTML = `猜错了！${hint}<br>你还剩 ${maxAttempts - attempts} 次机会。<br>当前范围：${lowerBound} - ${upperBound}`;
+            }
+
+            guessInput.value = '';
+            guessInput.focus();
+        }
+
+        function endGame() {
+            document.getElementById('guessInput').disabled = true;
+            document.querySelector('button').disabled = true;
+        }
+
+        function restartGame() {
+            randomNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            history.length = 0;
+            lowerBound = 1;
+            upperBound = 100;
+            document.getElementById('result').textContent = '';
+            document.getElementById('history').innerHTML = '';
+            document.getElementById('guessInput').disabled = false;
+            document.querySelector('button').disabled = false;
+            document.getElementById('guessInput').focus();
+        }
+    </script>
+</body>
+</html>
