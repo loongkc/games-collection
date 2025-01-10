@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼图游戏</title>
+    <style>
+        /* 全局样式 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 禁止页面滚动 */
+            touch-action: none; /* 禁用触摸默认行为 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .game-container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: min(700px, 90%); /* 移动端宽度适配 */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative; /* 用于定位原图显示区域 */
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 1.5rem; /* 移动端标题字体大小 */
+        }
+
+        .mode-select {
+            margin-bottom: 20px;
+        }
+
+        .mode-select button {
+            padding: 10px 20px;
+            font-size: 1em;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+        .mode-select button:hover {
+            background-color: #0056b3;
+        }
+
+        .puzzle-board {
+            display: grid;
+            gap: 2px; /* 拼图块之间的间隙 */
+            margin: 20px auto;
+            background-color: #ccc;
+            padding: 2px;
+            border-radius: 5px;
+            max-width: 100%; /* 防止拼图溢出 */
+        }
+
+        .puzzle-board .tile {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.2s;
+            aspect-ratio: 1; /* 保持拼图块为正方形 */
+            width: 100%; /* 宽度自适应 */
+            background-size: cover; /* 图片填充 */
+            background-position: center; /* 图片居中 */
+            font-size: 1.5em; /* 数字拼图的字体大小 */
+        }
+
+        .puzzle-board .tile.empty {
+            background-color: transparent;
+            cursor: default;
+        }
+
+        .puzzle-board .tile:not(.empty):hover {
+            transform: scale(1.05);
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #007BFF;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        .upload-container {
+            margin-bottom: 20px;
+        }
+
+        .upload-container input {
+            display: none;
+        }
+
+        .upload-container label {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+        .upload-container label:hover {
+            background-color: #218838;
+        }
+
+        .original-image {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 100px; /* 缩小后的原图宽度 */
+            height: auto; /* 高度自适应 */
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .puzzle-board .tile {
+                font-size: 1em; /* 移动端字体调小 */
+            }
+            .original-image {
+                width: 80px; /* 移动端原图缩小 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>拼图游戏</h1>
+        <div class="upload-container">
+            <input type="file" id="imageUpload" accept="image/*">
+            <label for="imageUpload">上传图片</label>
+        </div>
+        <div class="mode-select">
+            <button onclick="startGame(3)">3×3</button>
+            <button onclick="startGame(4)">4×4</button>
+            <button onclick="startGame(5)">5×5</button>
+        </div>
+        <div class="puzzle-board" id="puzzleBoard"></div>
+        <p class="status" id="status">请上传图片并选择拼图模式</p>
+        <a href="index.html" class="back-button">返回主界面</a>
+        <!-- 原图显示区域 -->
+        <img id="originalImage" class="original-image" alt="原图" style="display: none;">
+    </div>
+
+    <script>
+        let boardSize = 3; // 默认拼图大小
+        let board = []; // 拼图数据
+        let emptyTile = { row: -1, col: -1 }; // 空白块的位置
+        let imageSrc = null; // 用户上传的图片
+        let imageTiles = []; // 分割后的图片块
+        const puzzleBoard = document.getElementById('puzzleBoard');
+        const status = document.getElementById('status');
+        const imageUpload = document.getElementById('imageUpload');
+        const originalImage = document.getElementById('originalImage');
+
+        // 监听图片上传
+        imageUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageSrc = e.target.result;
+                    status.textContent = '图片已上传，请选择拼图模式';
+                    // 显示原图
+                    originalImage.src = imageSrc;
+                    originalImage.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 初始化游戏
+        function startGame(size) {
+            boardSize = size;
+            initializeBoard();
+            if (imageSrc) {
+                splitImage();
+            }
+            renderBoard();
+            shuffleBoard();
+            status.textContent = '游戏开始！';
+        }
+
+        // 初始化拼图数据
+        function initializeBoard() {
+            board = [];
+            let counter = 1;
+            for (let row = 0; row < boardSize; row++) {
+                const currentRow = [];
+                for (let col = 0; col < boardSize; col++) {
+                    if (row === boardSize - 1 && col === boardSize - 1) {
+                        currentRow.push(0); // 空白块
+                        emptyTile = { row, col };
+                    } else {
+                        currentRow.push(counter++);
+                    }
+                }
+                board.push(currentRow);
+            }
+        }
+
+        // 分割图片
+        function splitImage() {
+            imageTiles = [];
+            const image = new Image();
+            image.src = imageSrc;
+            image.onload = () => {
+                const tileWidth = image.width / boardSize;
+                const tileHeight = image.height / boardSize;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = tileWidth;
+                canvas.height = tileHeight;
+                const ctx = canvas.getContext('2d');
+
+                for (let row = 0; row < boardSize; row++) {
+                    for (let col = 0; col < boardSize; col++) {
+                        ctx.clearRect(0, 0, tileWidth, tileHeight);
+                        ctx.drawImage(
+                            image,
+                            col * tileWidth,
+                            row * tileHeight,
+                            tileWidth,
+                            tileHeight,
+                            0,
+                            0,
+                            tileWidth,
+                            tileHeight
+                        );
+                        imageTiles.push(canvas.toDataURL());
+                    }
+                }
+                renderBoard();
+            };
+        }
+
+        // 渲染拼图
+        function renderBoard() {
+            puzzleBoard.innerHTML = '';
+            puzzleBoard.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`; /* 使用 fr 单位自适应 */
+            puzzleBoard.style.gridTemplateRows = `repeat(${boardSize}, 1fr)`;
+
+            // 根据拼图大小动态调整拼图块大小
+            const tileSize = Math.min(80, 300 / boardSize); // 限制最大拼图块大小
+            puzzleBoard.style.width = `${tileSize * boardSize}px`;
+            puzzleBoard.style.height = `${tileSize * boardSize}px`;
+
+            for (let row = 0; row < boardSize; row++) {
+                for (let col = 0; col < boardSize; col++) {
+                    const tileValue = board[row][col];
+                    const tile = document.createElement('div');
+                    tile.classList.add('tile');
+                    if (tileValue === 0) {
+                        tile.classList.add('empty');
+                    } else {
+                        if (imageSrc) {
+                            // 显示图片拼图
+                            tile.style.backgroundImage = `url(${imageTiles[tileValue - 1]})`;
+                        } else {
+                            // 显示数字拼图
+                            tile.textContent = tileValue;
+                        }
+                        tile.addEventListener('click', () => moveTile(row, col));
+                    }
+                    puzzleBoard.appendChild(tile);
+                }
+            }
+        }
+
+        // 移动拼图块
+        function moveTile(row, col) {
+            // 检查是否与空白块相邻
+            if (
+                (Math.abs(row - emptyTile.row) === 1 && col === emptyTile.col) ||
+                (Math.abs(col - emptyTile.col) === 1 && row === emptyTile.row)
+            ) {
+                // 交换拼图块
+                board[emptyTile.row][emptyTile.col] = board[row][col];
+                board[row][col] = 0;
+                emptyTile = { row, col };
+
+                renderBoard();
+                checkWin();
+            }
+        }
+
+        // 检查是否完成拼图
+        function checkWin() {
+            let counter = 1;
+            for (let row = 0; row < boardSize; row++) {
+                for (let col = 0; col < boardSize; col++) {
+                    if (row === boardSize - 1 && col === boardSize - 1) {
+                        if (board[row][col] !== 0) return;
+                    } else {
+                        if (board[row][col] !== counter++) return;
+                    }
+                }
+            }
+            status.textContent = '恭喜你，拼图完成！';
+        }
+
+        // 打乱拼图
+        function shuffleBoard() {
+            const moves = 1000; // 打乱次数
+            for (let i = 0; i < moves; i++) {
+                const directions = [];
+                if (emptyTile.row > 0) directions.push({ row: -1, col: 0 }); // 上
+                if (emptyTile.row < boardSize - 1) directions.push({ row: 1, col: 0 }); // 下
+                if (emptyTile.col > 0) directions.push({ row: 0, col: -1 }); // 左
+                if (emptyTile.col < boardSize - 1) directions.push({ row: 0, col: 1 }); // 右
+
+                const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+                const newRow = emptyTile.row + randomDirection.row;
+                const newCol = emptyTile.col + randomDirection.col;
+
+                moveTile(newRow, newCol);
+            }
+        }
+    </script>
+</body>
+</html>
