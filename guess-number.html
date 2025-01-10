@@ -6,36 +6,47 @@
     <title>猜数字游戏</title>
     <style>
         /* 全局样式 */
-        body {
-            font-family: Arial, sans-serif;
+        html, body {
             margin: 0;
             padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 禁止页面滚动 */
+            touch-action: none; /* 禁用触摸默认行为 */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             background-color: #f0f0f0;
         }
+
         .game-container {
             text-align: center;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
+            max-width: min(400px, 85%); /* 移动端宽度适配 */
             width: 100%;
         }
+
         h1 {
             margin-bottom: 20px;
+            font-size: 1.5rem; /* 移动端标题字体大小 */
         }
+
         input[type="number"] {
             padding: 10px;
             font-size: 1em;
-            width: 80%;
+            width: calc(100% - 20px); /* 输入框宽度占满容器，减去 padding */
             margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+
         button, .button {
             padding: 10px 20px;
             font-size: 1em;
@@ -53,42 +64,75 @@
             width: calc(100% - 40px); /* 按钮宽度占满容器，减去 padding */
             margin-top: 10px; /* 按钮之间的间距 */
         }
+
         button:hover, .button:hover {
             background-color: #0056b3;
         }
+
         .result {
             margin-top: 20px;
             font-size: 1.2em;
         }
+
         .history {
             margin-top: 20px;
             text-align: left;
         }
+
         .history ul {
             list-style-type: none;
             padding: 0;
         }
+
         .history li {
             margin: 5px 0;
         }
+
         .restart-button {
             background-color: #28a745;
         }
+
         .restart-button:hover {
             background-color: #218838;
         }
+
         .back-button {
             background-color: #007BFF; /* 蓝色背景 */
             color: #fff; /* 白色文字 */
         }
+
         .back-button:hover {
             background-color: #0056b3; /* 悬停时深蓝色 */
         }
+
         /* 图标样式 */
         .icon {
             width: 16px;
             height: 16px;
             fill: currentColor; /* 图标颜色与文字颜色一致 */
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.2rem; /* 更小的标题字体 */
+            }
+
+            input[type="number"] {
+                font-size: 0.9em; /* 更小的输入框字体 */
+            }
+
+            button, .button {
+                font-size: 0.9em; /* 更小的按钮字体 */
+            }
+
+            .result {
+                font-size: 1em; /* 更小的结果字体 */
+            }
+
+            .history {
+                font-size: 0.9em; /* 更小的历史记录字体 */
+            }
         }
     </style>
 </head>
@@ -96,7 +140,7 @@
     <div class="game-container">
         <h1>猜数字游戏</h1>
         <p>猜一个1到100之间的数字：</p>
-        <input type="number" id="guessInput" min="1" max="100" placeholder="输入你的猜测">
+        <input type="number" id="guessInput" min="1" max="100" placeholder="输入你的猜测" inputmode="numeric">
         <button onclick="checkGuess()">提交</button>
         <div class="result" id="result"></div>
         <div class="history">

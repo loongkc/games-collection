@@ -15,6 +15,8 @@
             align-items: center;
             height: 100vh;
             background-color: #f0f0f0;
+            overflow: hidden; /* 禁止页面滚动 */
+            touch-action: none; /* 禁止触摸默认行为 */
         }
         .game-container {
             text-align: center;
@@ -42,12 +44,48 @@
         .back-button:hover {
             background-color: #0056b3;
         }
+
+        /* 虚拟按钮样式 */
+        .virtual-buttons {
+            display: none; /* 默认隐藏，移动端显示 */
+            margin-top: 20px;
+            text-align: center;
+        }
+        .virtual-buttons button {
+            font-size: 24px;
+            padding: 15px;
+            margin: 5px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .virtual-buttons button:active {
+            background-color: #0056b3;
+        }
+
+        /* 移动端样式 */
+        @media (max-width: 600px) {
+            canvas {
+                width: 90vw;
+                height: 60vh;
+            }
+            .virtual-buttons {
+                display: block; /* 移动端显示虚拟按钮 */
+            }
+        }
     </style>
 </head>
 <body>
     <div class="game-container">
         <h1>打砖块</h1>
         <canvas id="gameCanvas" width="480" height="320"></canvas>
+        <!-- 虚拟按钮 -->
+        <div class="virtual-buttons">
+            <button id="left-btn">⬅️ 左</button>
+            <button id="right-btn">➡️ 右</button>
+        </div>
         <a href="index.html" class="back-button">返回主界面</a>
     </div>
     <script>
@@ -152,7 +190,6 @@
         }
 
         function resetBall() {
-            // 球从当前板子位置发出
             x = paddleX + paddleWidth / 2;
             y = canvas.height - 30;
             dx = 2;
@@ -182,7 +219,7 @@
                         alert('游戏结束');
                         document.location.reload();
                     } else {
-                        resetBall(); // 重置球的位置，从当前板子位置发出
+                        resetBall();
                     }
                 }
             }
@@ -198,6 +235,7 @@
             requestAnimationFrame(draw);
         }
 
+        // 键盘控制
         document.addEventListener('keydown', keyDownHandler);
         document.addEventListener('keyup', keyUpHandler);
 
@@ -216,6 +254,29 @@
                 leftPressed = false;
             }
         }
+
+        // 虚拟按钮控制
+        const leftButton = document.getElementById('left-btn');
+        const rightButton = document.getElementById('right-btn');
+
+        leftButton.addEventListener('touchstart', () => {
+            leftPressed = true;
+        });
+        leftButton.addEventListener('touchend', () => {
+            leftPressed = false;
+        });
+
+        rightButton.addEventListener('touchstart', () => {
+            rightPressed = true;
+        });
+        rightButton.addEventListener('touchend', () => {
+            rightPressed = false;
+        });
+
+        // 禁止页面滚动
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
 
         draw();
     </script>
