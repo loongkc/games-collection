@@ -245,6 +245,14 @@
         const modeToggle = document.getElementById('modeToggle');
         const body = document.body;
 
+        // 初始化主题
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            body.classList.toggle('light-mode', savedTheme === 'light');
+            modeToggle.textContent = savedTheme === 'light' ? '☀️' : '🌙';
+            updateAnimation(); // 更新动画
+        }
+
         // 创建加载扩散渐变动画
         function createRippleEffect() {
             const ripple = document.createElement('div');
@@ -259,11 +267,11 @@
 
         modeToggle.addEventListener('click', () => {
             createRippleEffect(); // 触发加载扩散渐变动画
-            setTimeout(() => {
-                body.classList.toggle('light-mode');
-                modeToggle.textContent = body.classList.contains('light-mode') ? '☀️' : '🌙';
-                updateAnimation(); // 切换动画
-            }, 250); // 等待动画完成后再切换模式
+            body.classList.toggle('light-mode');
+            const isLightMode = body.classList.contains('light-mode');
+            modeToggle.textContent = isLightMode ? '☀️' : '🌙';
+            localStorage.setItem('theme', isLightMode ? 'light' : 'dark'); // 存储主题模式
+            updateAnimation(); // 切换动画
         });
 
         // 生成随机星星
@@ -373,9 +381,8 @@
             }
         }
 
-        // 初始化动画
-        createStars();
-        createFireflies();
+        // 初始化主题和动画
+        initializeTheme();
     </script>
 </body>
 </html>

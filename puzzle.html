@@ -6,37 +6,60 @@
     <title>拼图游戏</title>
     <style>
         /* 全局样式 */
+        :root {
+            --background-color: #f0f0f0;
+            --text-color: #333;
+            --tile-background: #fff;
+            --tile-border: #ccc;
+            --button-background: #007BFF;
+            --button-hover: #0056b3;
+            --status-color: #333;
+        }
+
+        [data-theme="dark"] {
+            --background-color: #333;
+            --text-color: #f0f0f0;
+            --tile-background: #444;
+            --tile-border: #555;
+            --button-background: #28a745;
+            --button-hover: #218838;
+            --status-color: #f0f0f0;
+        }
+
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* 禁止页面滚动 */
-            touch-action: none; /* 禁用触摸默认行为 */
+            overflow: hidden;
+            touch-action: none; /* 禁止页面滚动 */
+            user-select: none; /* 禁止文本选择 */
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f0f0f0;
+            background-color: var(--background-color);
+            color: var(--text-color);
             font-family: Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .game-container {
             text-align: center;
-            background-color: #fff;
+            background-color: var(--tile-background);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: min(700px, 90%); /* 移动端宽度适配 */
+            max-width: 85%;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative; /* 用于定位原图显示区域 */
+            position: relative;
         }
 
         h1 {
             margin-bottom: 20px;
-            font-size: 1.5rem; /* 移动端标题字体大小 */
+            font-size: 1.5rem;
         }
 
         .mode-select {
@@ -50,38 +73,41 @@
             cursor: pointer;
             border: none;
             border-radius: 5px;
-            background-color: #007BFF;
+            background-color: var(--button-background);
             color: #fff;
             transition: background-color 0.3s;
         }
 
         .mode-select button:hover {
-            background-color: #0056b3;
+            background-color: var(--button-hover);
         }
 
         .puzzle-board {
             display: grid;
-            gap: 2px; /* 拼图块之间的间隙 */
+            gap: 2px;
             margin: 20px auto;
-            background-color: #ccc;
+            background-color: var(--tile-border);
             padding: 2px;
             border-radius: 5px;
-            max-width: 100%; /* 防止拼图溢出 */
+            max-width: 100%;
+            position: relative;
         }
 
         .puzzle-board .tile {
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #fff;
+            background-color: var(--tile-background);
             cursor: pointer;
             border-radius: 5px;
             transition: transform 0.2s;
-            aspect-ratio: 1; /* 保持拼图块为正方形 */
-            width: 100%; /* 宽度自适应 */
-            background-size: cover; /* 图片填充 */
-            background-position: center; /* 图片居中 */
-            font-size: 1.5em; /* 数字拼图的字体大小 */
+            aspect-ratio: 1;
+            width: 100%;
+            background-size: cover;
+            background-position: center;
+            font-size: 1.5em;
+            color: var(--text-color);
+            position: relative;
         }
 
         .puzzle-board .tile.empty {
@@ -89,13 +115,10 @@
             cursor: default;
         }
 
-        .puzzle-board .tile:not(.empty):hover {
-            transform: scale(1.05);
-        }
-
         .status {
             margin-top: 20px;
             font-size: 1.2em;
+            color: var(--status-color);
         }
 
         .back-button {
@@ -104,14 +127,14 @@
             padding: 10px 20px;
             font-size: 1em;
             color: #fff;
-            background-color: #007BFF;
+            background-color: var(--button-background);
             text-decoration: none;
             border-radius: 5px;
             transition: background-color 0.3s;
         }
 
         .back-button:hover {
-            background-color: #0056b3;
+            background-color: var(--button-hover);
         }
 
         .upload-container {
@@ -128,32 +151,59 @@
             cursor: pointer;
             border: none;
             border-radius: 5px;
-            background-color: #28a745;
+            background-color: var(--button-background);
             color: #fff;
             transition: background-color 0.3s;
         }
 
         .upload-container label:hover {
-            background-color: #218838;
+            background-color: var(--button-hover);
         }
 
         .original-image {
             position: absolute;
             top: 20px;
             left: 20px;
-            width: 100px; /* 缩小后的原图宽度 */
-            height: auto; /* 高度自适应 */
-            border: 2px solid #ccc;
+            width: 100px;
+            height: 100px;
+            border: 2px solid var(--tile-border);
             border-radius: 5px;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--button-background);
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--button-hover);
+        }
+
+        .current-stats {
+            margin-top: 10px;
+            font-size: 1em;
+            color: var(--status-color);
         }
 
         @media (max-width: 600px) {
             .puzzle-board .tile {
-                font-size: 1em; /* 移动端字体调小 */
+                font-size: 1em;
             }
             .original-image {
-                width: 80px; /* 移动端原图缩小 */
+                width: 80px;
+                height: 80px;
             }
         }
     </style>
@@ -161,6 +211,7 @@
 <body>
     <div class="game-container">
         <h1>拼图游戏</h1>
+        <button class="theme-toggle" onclick="toggleTheme()">切换主题</button>
         <div class="upload-container">
             <input type="file" id="imageUpload" accept="image/*">
             <label for="imageUpload">上传图片</label>
@@ -171,10 +222,11 @@
             <button onclick="startGame(5)">5×5</button>
         </div>
         <div class="puzzle-board" id="puzzleBoard"></div>
-        <p class="status" id="status">请上传图片并选择拼图模式</p>
+        <p class="status" id="status">请选择拼图模式</p>
+        <div class="current-stats" id="currentStats"></div>
         <a href="index.html" class="back-button">返回主界面</a>
         <!-- 原图显示区域 -->
-        <img id="originalImage" class="original-image" alt="原图" style="display: none;">
+        <div id="originalImage" class="original-image" style="display: none;"></div>
     </div>
 
     <script>
@@ -183,8 +235,12 @@
         let emptyTile = { row: -1, col: -1 }; // 空白块的位置
         let imageSrc = null; // 用户上传的图片
         let imageTiles = []; // 分割后的图片块
+        let startTime = null; // 游戏开始时间
+        let moveCount = 0; // 移动步数
+        let animationFrameId = null; // requestAnimationFrame ID
         const puzzleBoard = document.getElementById('puzzleBoard');
         const status = document.getElementById('status');
+        const currentStats = document.getElementById('currentStats');
         const imageUpload = document.getElementById('imageUpload');
         const originalImage = document.getElementById('originalImage');
 
@@ -196,24 +252,56 @@
                 reader.onload = (e) => {
                     imageSrc = e.target.result;
                     status.textContent = '图片已上传，请选择拼图模式';
-                    // 显示原图
-                    originalImage.src = imageSrc;
-                    originalImage.style.display = 'block';
+                    // 显示裁剪后的正方形图片
+                    cropImageToSquare(imageSrc, (croppedImage) => {
+                        originalImage.style.backgroundImage = `url(${croppedImage})`;
+                        originalImage.style.display = 'block';
+                        imageSrc = croppedImage; // 使用裁剪后的图片作为拼图源
+                    });
                 };
                 reader.readAsDataURL(file);
             }
         });
+
+        // 裁剪图片为正方形
+        function cropImageToSquare(imageSrc, callback) {
+            const image = new Image();
+            image.src = imageSrc;
+            image.onload = () => {
+                const canvas = document.createElement('canvas');
+                const size = Math.min(image.width, image.height); // 取最小边作为正方形边长
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+
+                // 计算裁剪区域
+                const offsetX = (image.width - size) / 2;
+                const offsetY = (image.height - size) / 2;
+
+                // 裁剪并绘制到 canvas
+                ctx.drawImage(image, offsetX, offsetY, size, size, 0, 0, size, size);
+
+                // 将裁剪后的图片转换为 DataURL
+                const croppedImage = canvas.toDataURL();
+                callback(croppedImage);
+            };
+        }
 
         // 初始化游戏
         function startGame(size) {
             boardSize = size;
             initializeBoard();
             if (imageSrc) {
-                splitImage();
+                splitImage(); // 图片模式
+            } else {
+                status.textContent = '数字模式已启动！';
             }
             renderBoard();
             shuffleBoard();
             status.textContent = '游戏开始！';
+            startTime = Date.now(); // 记录开始时间
+            moveCount = 0; // 重置步数
+            startTimer(); // 启动计时器
         }
 
         // 初始化拼图数据
@@ -272,11 +360,11 @@
         // 渲染拼图
         function renderBoard() {
             puzzleBoard.innerHTML = '';
-            puzzleBoard.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`; /* 使用 fr 单位自适应 */
+            puzzleBoard.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
             puzzleBoard.style.gridTemplateRows = `repeat(${boardSize}, 1fr)`;
 
             // 根据拼图大小动态调整拼图块大小
-            const tileSize = Math.min(80, 300 / boardSize); // 限制最大拼图块大小
+            const tileSize = Math.min(80, 300 / boardSize);
             puzzleBoard.style.width = `${tileSize * boardSize}px`;
             puzzleBoard.style.height = `${tileSize * boardSize}px`;
 
@@ -295,6 +383,7 @@
                             // 显示数字拼图
                             tile.textContent = tileValue;
                         }
+                        // 绑定点击事件
                         tile.addEventListener('click', () => moveTile(row, col));
                     }
                     puzzleBoard.appendChild(tile);
@@ -314,10 +403,47 @@
                 board[row][col] = 0;
                 emptyTile = { row, col };
 
+                moveCount++; // 增加步数
                 renderBoard();
                 checkWin();
             }
         }
+
+        // 滑动操作
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const swipeThreshold = 30; // 滑动阈值
+
+        puzzleBoard.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        puzzleBoard.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            // 判断是否为滑动
+            if (Math.abs(deltaX) > swipeThreshold || Math.abs(deltaY) > swipeThreshold) {
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    // 水平滑动
+                    if (deltaX > 0) {
+                        moveTile(emptyTile.row, emptyTile.col - 1); // 向右滑动
+                    } else {
+                        moveTile(emptyTile.row, emptyTile.col + 1); // 向左滑动
+                    }
+                } else {
+                    // 垂直滑动
+                    if (deltaY > 0) {
+                        moveTile(emptyTile.row - 1, emptyTile.col); // 向下滑动
+                    } else {
+                        moveTile(emptyTile.row + 1, emptyTile.col); // 向上滑动
+                    }
+                }
+            }
+        });
 
         // 检查是否完成拼图
         function checkWin() {
@@ -331,24 +457,48 @@
                     }
                 }
             }
-            status.textContent = '恭喜你，拼图完成！';
+            const endTime = Date.now();
+            const timeTaken = Math.floor((endTime - startTime) / 1000); // 计算用时（秒）
+            status.textContent = `恭喜你，拼图完成！用时：${timeTaken}秒，步数：${moveCount}`;
+            cancelAnimationFrame(animationFrameId); // 停止计时器
+        }
+
+        // 启动计时器
+        function startTimer() {
+            cancelAnimationFrame(animationFrameId); // 清除之前的计时器
+            const updateStats = () => {
+                const currentTime = Math.floor((Date.now() - startTime) / 1000);
+                currentStats.textContent = `当前用时：${currentTime}秒，步数：${moveCount}`;
+                animationFrameId = requestAnimationFrame(updateStats); // 递归调用
+            };
+            updateStats(); // 启动计时器
         }
 
         // 打乱拼图
         function shuffleBoard() {
-            const moves = 1000; // 打乱次数
+            const moves = 1000;
             for (let i = 0; i < moves; i++) {
                 const directions = [];
-                if (emptyTile.row > 0) directions.push({ row: -1, col: 0 }); // 上
-                if (emptyTile.row < boardSize - 1) directions.push({ row: 1, col: 0 }); // 下
-                if (emptyTile.col > 0) directions.push({ row: 0, col: -1 }); // 左
-                if (emptyTile.col < boardSize - 1) directions.push({ row: 0, col: 1 }); // 右
+                if (emptyTile.row > 0) directions.push({ row: -1, col: 0 });
+                if (emptyTile.row < boardSize - 1) directions.push({ row: 1, col: 0 });
+                if (emptyTile.col > 0) directions.push({ row: 0, col: -1 });
+                if (emptyTile.col < boardSize - 1) directions.push({ row: 0, col: 1 });
 
                 const randomDirection = directions[Math.floor(Math.random() * directions.length)];
                 const newRow = emptyTile.row + randomDirection.row;
                 const newCol = emptyTile.col + randomDirection.col;
 
                 moveTile(newRow, newCol);
+            }
+        }
+
+        // 切换主题
+        function toggleTheme() {
+            const body = document.body;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.setAttribute('data-theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
             }
         }
     </script>
