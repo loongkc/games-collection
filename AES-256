@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AES-256 文件加密工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f8fa;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .drop-zone {
+            border: 3px dashed #3498db;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            transition: all 0.3s;
+            background-color: #f8fbff;
+        }
+        .drop-zone:hover {
+            background-color: #edf5ff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 500;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        .password-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .file-action-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            margin: 0 2px;
+        }
+        
+        .encrypt-btn:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+        }
+        
+        .decrypt-btn:hover {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+        }
+        
+        .remove-btn:hover {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+        }
+        
+        .btn-icon {
+            font-size: 16px;
+        }
+        
+        .actions-cell {
+            width: 110px;
+            text-align: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+        }
+        
+        .password-strength {
+            margin-top: 5px;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .password-strong {
+            color: #27ae60;
+        }
+        
+        .password-medium {
+            color: #f39c12;
+        }
+        
+        .password-weak {
+            color: #e74c3c;
+        }
+        .status {
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .success { 
+            background-color: #d4edda; 
+            color: #155724; 
+            border-left: 4px solid #28a745;
+        }
+        .error { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border-left: 4px solid #dc3545;
+        }
+        .info { 
+            background-color: #e2e3e5; 
+            color: #383d41; 
+            border-left: 4px solid #6c757d;
+        }
+        .progress-bar {
+            height: 4px;
+            width: 100%;
+            background-color: #eee;
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #3498db;
+            transition: width 0.3s;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AES-256 文件加密工具</h1>
+        <p>使用AES-256 CBC模式加密和解密您的文件，保护您的数据安全</p>
+        
+        <div class="drop-zone" id="dropZone">
+            <p>拖放文件到此区域 或</p>
+            <input type="file" id="fileInput" multiple hidden>
+            <button class="button" onclick="document.getElementById('fileInput').click()">选择文件</button>
+        </div>
+
+        <table id="fileTable">
+            <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th>大小</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="fileList">
+                <tr id="emptyState">
+                    <td colspan="3" class="empty-state">未选择文件</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="password-container">
+            <div class="input-group">
+                <label for="password">密码：</label>
+                <input type="password" id="password" placeholder="输入密码">
+                <div id="passwordStrength" class="password-strength">密码强度: <span id="strengthText"></span></div>
+            </div>
+            <div class="input-group">
+                <label for="confirmPassword">确认密码：</label>
+                <input type="password" id="confirmPassword" placeholder="再次输入密码">
+            </div>
+        </div>
+
+        <div id="status" class="status info">准备就绪，请选择文件并设置密码</div>
+
+        <div class="button-group">
+            <button class="button" onclick="processFiles('encrypt')">全部加密</button>
+            <button class="button" onclick="processFiles('decrypt')">全部解密</button>
+            <button class="button" onclick="clearList()">清空列表</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        const ENCRYPTED_EXT = '.encrypted';
+        const SALT_SIZE = 16; // 16字节盐值
+        const IV_SIZE = 16;   // 16字节初始化向量
+        const PBKDF2_ITERATIONS = 10000;
+        const VERSION = '1.0.0'; // 版本号
+
+        let files = [];
+        let isProcessing = false;
+        let lastUsedPassword = ''; // 存储上次使用的密码，方便批量操作
+
+        // 初始化
+        function init() {
+            setupEventListeners();
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const passwordInput = document.getElementById('password');
+
+            // 拖放事件
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.style.backgroundColor = '#e3f2fd';
+                dropZone.style.borderColor = '#2196f3';
+            });
+
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.style.backgroundColor = '#f8fbff';
+                dropZone.style.borderColor = '#3498db';
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.style.backgroundColor = '#f8fbff';
+                dropZone.style.borderColor = '#3498db';
+                handleFiles(e.dataTransfer.files);
+            });
+
+            // 文件输入事件
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+            
+            // 密码强度实时检查
+            passwordInput.addEventListener('input', (e) => {
+                checkPasswordStrength(e.target.value);
+            });
+        }
+
+        // 处理添加的文件
+        function handleFiles(newFiles) {
+            if (isProcessing) {
+                showStatus('正在处理文件，请稍后再添加', 'info');
+                return;
+            }
+            
+            if (newFiles.length === 0) return;
+            
+            files = [...files, ...Array.from(newFiles)];
+            updateFileList();
+            showStatus(`已添加 ${newFiles.length} 个文件`, 'info');
+        }
+
+        // 更新文件列表
+        function updateFileList() {
+            const tbody = document.getElementById('fileList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (emptyState) {
+                tbody.removeChild(emptyState);
+            }
+            
+            // 清空现有列表
+            tbody.innerHTML = '';
+            
+            // 重新添加所有文件
+            files.forEach((file, index) => {
+                const row = document.createElement('tr');
+                row.id = `file-row-${index}`;
+                
+                const actionButtons = document.createElement('div');
+                actionButtons.className = 'action-buttons';
+                actionButtons.innerHTML = `
+                    <button class="file-action-btn encrypt-btn" onclick="processSingleFile(${index}, 'encrypt')">
+                        <span class="btn-icon">🔒</span>
+                    </button>
+                    <button class="file-action-btn decrypt-btn" onclick="processSingleFile(${index}, 'decrypt')">
+                        <span class="btn-icon">🔓</span>
+                    </button>
+                    <button class="file-action-btn remove-btn" onclick="removeFile(${index})">
+                        <span class="btn-icon">✕</span>
+                    </button>
+                `;
+                
+                row.innerHTML = `
+                    <td>${file.name}</td>
+                    <td>${formatSize(file.size)}</td>
+                    <td>
+                        <span id="status-${index}">等待处理</span>
+                        <div class="progress-bar" id="progress-${index}">
+                            <div class="progress-fill" id="progress-fill-${index}"></div>
+                        </div>
+                    </td>
+                    <td class="actions-cell"></td>
+                `;
+                
+                tbody.appendChild(row);
+                row.querySelector('.actions-cell').appendChild(actionButtons);
+            });
+            
+            // 如果没有文件，显示空状态
+            if (files.length === 0) {
+                tbody.innerHTML = `
+                    <tr id="emptyState">
+                        <td colspan="4" class="empty-state">未选择文件</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // 处理文件（加密/解密）
+        async function processFiles(mode) {
+            if (isProcessing) {
+                showStatus('正在处理，请等待当前操作完成', 'info');
+                return;
+            }
+            
+            if (files.length === 0) {
+                showStatus('请先选择要处理的文件', 'error');
+                return;
+            }
+            
+            isProcessing = true;
+            
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            
+            if (!validatePassword(password, confirm)) {
+                isProcessing = false;
+                return;
+            }
+
+            showStatus(`开始${mode === 'encrypt' ? '加密' : '解密'}文件...`, 'info');
+            
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    updateFileStatus(i, '处理中...', 50);
+                    
+                    try {
+                        const arrayBuffer = await readFile(file);
+                        
+                        if (mode === 'encrypt') {
+                            await encryptFile(file, arrayBuffer, password, i);
+                        } else {
+                            if (!file.name.endsWith(ENCRYPTED_EXT)) {
+                                updateFileStatus(i, '非加密文件', 0, 'red');
+                                continue;
+                            }
+                            await decryptFile(file, arrayBuffer, password, i);
+                        }
+                        
+                        updateFileStatus(i, '完成', 100, 'green');
+                    } catch (fileError) {
+                        updateFileStatus(i, `失败: ${fileError.message}`, 0, 'red');
+                    }
+                }
+                
+                showStatus(`所有文件${mode === 'encrypt' ? '加密' : '解密'}操作已完成`, 'success');
+            } catch (error) {
+                showStatus(`操作失败: ${error.message}`, 'error');
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // 加密文件
+        async function encryptFile(file, data, password, index) {
+            // 生成随机盐值和初始化向量
+            const salt = CryptoJS.lib.WordArray.random(SALT_SIZE);
+            const iv = CryptoJS.lib.WordArray.random(IV_SIZE);
+            
+            // 从密码派生密钥
+            const key = CryptoJS.PBKDF2(password, salt, {
+                keySize: 256/32,
+                iterations: PBKDF2_ITERATIONS
+            });
+
+            updateFileStatus(index, '正在加密...', 60);
+
+            // 将文件数据转换为 WordArray
+            const wordArray = CryptoJS.lib.WordArray.create(new Uint8Array(data));
+            
+            // 加密数据
+            const encrypted = CryptoJS.AES.encrypt(wordArray, key, {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            });
+
+            updateFileStatus(index, '正在保存...', 80);
+
+            // 组合盐值、IV和加密数据
+            const resultWordArray = salt.concat(iv).concat(encrypted.ciphertext);
+            
+            // 转换为 Uint8Array 进行保存
+            const resultUint8 = wordArrayToUint8Array(resultWordArray);
+            saveFile(resultUint8, file.name + ENCRYPTED_EXT);
+        }
+
+        // 解密文件
+        async function decryptFile(file, data, password, index) {
+            try {
+                // 从文件数据创建 WordArray
+                const dataArray = new Uint8Array(data);
+                const encryptedWordArray = CryptoJS.lib.WordArray.create(dataArray);
+                
+                updateFileStatus(index, '提取加密参数...', 40);
+                
+                // 提取盐值 (前16字节)
+                const salt = CryptoJS.lib.WordArray.create();
+                salt.words = encryptedWordArray.words.slice(0, SALT_SIZE / 4);
+                salt.sigBytes = SALT_SIZE;
+                
+                // 提取初始化向量 (接下来的16字节)
+                const iv = CryptoJS.lib.WordArray.create();
+                iv.words = encryptedWordArray.words.slice(SALT_SIZE / 4, (SALT_SIZE + IV_SIZE) / 4);
+                iv.sigBytes = IV_SIZE;
+                
+                // 提取加密数据 (剩余部分)
+                const ciphertext = CryptoJS.lib.WordArray.create();
+                ciphertext.words = encryptedWordArray.words.slice((SALT_SIZE + IV_SIZE) / 4);
+                ciphertext.sigBytes = encryptedWordArray.sigBytes - SALT_SIZE - IV_SIZE;
+                
+                updateFileStatus(index, '派生密钥...', 60);
+                
+                // 从密码和盐值派生密钥
+                const key = CryptoJS.PBKDF2(password, salt, {
+                    keySize: 256/32,
+                    iterations: PBKDF2_ITERATIONS
+                });
+                
+                updateFileStatus(index, '解密数据...', 80);
+                
+                // 解密数据
+                const decrypted = CryptoJS.AES.decrypt(
+                    { ciphertext: ciphertext },
+                    key,
+                    { 
+                        iv: iv,
+                        mode: CryptoJS.mode.CBC,
+                        padding: CryptoJS.pad.Pkcs7
+                    }
+                );
+                
+                if (decrypted.sigBytes <= 0) {
+                    throw new Error('密码错误或文件已损坏');
+                }
+                
+                // 转换为 Uint8Array 进行保存
+                const decryptedData = wordArrayToUint8Array(decrypted);
+                
+                // 生成原始文件名 (移除.encrypted扩展名)
+                const outputName = file.name.replace(ENCRYPTED_EXT, '');
+                
+                saveFile(decryptedData, outputName);
+            } catch (error) {
+                throw new Error(`解密失败: ${error.message}`);
+            }
+        }
+
+        // 将 WordArray 转换为 Uint8Array (修复版)
+        function wordArrayToUint8Array(wordArray) {
+            const length = wordArray.sigBytes;
+            const uint8Array = new Uint8Array(length);
+            
+            for (let i = 0; i < length; i++) {
+                const bytePosition = i >>> 2; // 除以4的整数部分
+                const byteShift = (3 - (i % 4)) * 8; // 确定在 word 中的位置
+                uint8Array[i] = (wordArray.words[bytePosition] >>> byteShift) & 0xff;
+            }
+            
+            return uint8Array;
+        }
+
+        // 读取文件为 ArrayBuffer
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('文件读取失败'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // 保存文件
+        function saveFile(data, filename) {
+            const blob = new Blob([data], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+
+        // 检查密码强度
+        function checkPasswordStrength(pwd) {
+            let strength = 0;
+            const strengthEl = document.getElementById('passwordStrength');
+            const strengthTextEl = document.getElementById('strengthText');
+            
+            // 显示强度指示器
+            strengthEl.style.display = 'block';
+            
+            if (pwd.length === 0) {
+                strengthEl.style.display = 'none';
+                return 0;
+            }
+            
+            // 基本长度检查
+            if (pwd.length >= 8) strength += 1;
+            if (pwd.length >= 12) strength += 1;
+            
+            // 复杂性检查
+            if (/[A-Z]/.test(pwd)) strength += 1;
+            if (/[a-z]/.test(pwd)) strength += 1;
+            if (/[0-9]/.test(pwd)) strength += 1;
+            if (/[^A-Za-z0-9]/.test(pwd)) strength += 1;
+            
+            // 更新UI
+            if (strength <= 2) {
+                strengthTextEl.textContent = '弱';
+                strengthTextEl.className = 'password-weak';
+            } else if (strength <= 4) {
+                strengthTextEl.textContent = '中';
+                strengthTextEl.className = 'password-medium';
+            } else {
+                strengthTextEl.textContent = '强';
+                strengthTextEl.className = 'password-strong';
+            }
+            
+            return strength;
+        }
+
+        // 验证密码
+        function validatePassword(pwd, confirm) {
+            // 空密码检查
+            if (!pwd) {
+                showStatus('请输入密码', 'error');
+                return false;
+            }
+            
+            // 检查密码是否一致
+            if (pwd !== confirm) {
+                showStatus('两次输入的密码不一致', 'error');
+                return false;
+            }
+            
+            // 获取密码强度
+            const strength = checkPasswordStrength(pwd);
+            
+            // 如果密码较弱，显示警告但继续
+            if (strength <= 2) {
+                showStatus('警告：您正在使用弱密码，这可能导致数据不安全', 'info');
+            } else if (strength <= 4) {
+                showStatus('提示：您的密码安全性适中', 'info');
+            } else {
+                showStatus('您的密码强度很好', 'success');
+            }
+            
+            return true;
+        }
+
+        // 格式化文件大小
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            
+            const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const k = 1024;
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + units[i];
+        }
+
+        // 显示状态消息
+        function showStatus(msg, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = msg;
+            statusEl.className = `status ${type}`;
+        }
+
+        // 更新文件状态
+        function updateFileStatus(index, status, progress = 0, color = null) {
+            const statusEl = document.getElementById(`status-${index}`);
+            const progressFill = document.getElementById(`progress-fill-${index}`);
+            
+            if (statusEl) {
+                statusEl.textContent = status;
+                if (color) {
+                    statusEl.style.color = color;
+                }
+            }
+            
+            if (progressFill) {
+                progressFill.style.width = `${progress}%`;
+            }
+        }
+
+        // 处理单个文件
+        async function processSingleFile(index, mode) {
+            if (isProcessing) {
+                showStatus('正在处理其他文件，请稍后尝试', 'info');
+                return;
+            }
+            
+            if (index < 0 || index >= files.length) {
+                showStatus('文件索引无效', 'error');
+                return;
+            }
+            
+            isProcessing = true;
+            
+            const file = files[index];
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            
+            if (!validatePassword(password, confirm)) {
+                isProcessing = false;
+                return;
+            }
+            
+            // 保存密码供之后操作使用
+            lastUsedPassword = password;
+            
+            try {
+                updateFileStatus(index, '处理中...', 30);
+                
+                const arrayBuffer = await readFile(file);
+                
+                if (mode === 'encrypt') {
+                    await encryptFile(file, arrayBuffer, password, index);
+                } else {
+                    if (!file.name.endsWith(ENCRYPTED_EXT)) {
+                        updateFileStatus(index, '非加密文件', 0, 'red');
+                        isProcessing = false;
+                        return;
+                    }
+                    await decryptFile(file, arrayBuffer, password, index);
+                }
+                
+                updateFileStatus(index, '完成', 100, 'green');
+                showStatus(`文件 "${file.name}" ${mode === 'encrypt' ? '加密' : '解密'}完成`, 'success');
+            } catch (error) {
+                updateFileStatus(index, `失败: ${error.message}`, 0, 'red');
+                showStatus(`操作失败: ${error.message}`, 'error');
+            } finally {
+                isProcessing = false;
+            }
+        }
+        
+        // 从列表中移除文件
+        function removeFile(index) {
+            if (isProcessing) {
+                showStatus('正在处理文件，无法移除', 'info');
+                return;
+            }
+            
+            if (index < 0 || index >= files.length) return;
+            
+            files.splice(index, 1);
+            updateFileList();
+            showStatus('文件已移除', 'info');
+        }
+
+        // 清空文件列表
+        function clearList() {
+            if (isProcessing) {
+                showStatus('正在处理文件，无法清空列表', 'info');
+                return;
+            }
+            
+            files = [];
+            updateFileList();
+            showStatus('文件列表已清空', 'info');
+        }
+        
+        // 导出加密文件的元数据 (将来可用于批量解密)
+        function exportMetadata() {
+            if (files.length === 0) {
+                showStatus('没有文件可以导出元数据', 'info');
+                return;
+            }
+            
+            const metadata = {
+                tool: 'AES-256-File-Encryption',
+                version: VERSION,
+                exportDate: new Date().toISOString(),
+                files: files.map(file => ({
+                    name: file.name,
+                    size: file.size,
+                    lastModified: file.lastModified
+                }))
+            };
+            
+            const jsonString = JSON.stringify(metadata, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'encryption-metadata.json';
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            showStatus('元数据已导出', 'success');
+        }
+
+        // 初始化应用
+        window.onload = init;
+    </script>
+</body>
+</html>
