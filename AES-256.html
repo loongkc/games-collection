@@ -243,6 +243,7 @@
             <button class="button" onclick="processFiles('encrypt')">全部加密</button>
             <button class="button" onclick="processFiles('decrypt')">全部解密</button>
             <button class="button" onclick="clearList()">清空列表</button>
+            <button class="button" onclick="back()">返回主界面</button>
         </div>
     </div>
 
@@ -745,6 +746,10 @@
             updateFileList();
             showStatus('文件列表已清空', 'info');
         }
+
+        function back() {
+			window.location.href = "index.html";
+		}
         
         // 导出加密文件的元数据 (将来可用于批量解密)
         function exportMetadata() {
